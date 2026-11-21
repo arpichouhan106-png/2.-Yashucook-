@@ -1,0 +1,6 @@
+{
+  "name": "Yashucook",
+  "description": "A modern culinary video creation and watching ecosystem with AI fridge cook, anti-fraud earnings, smart shopping lists, and creator monetization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
