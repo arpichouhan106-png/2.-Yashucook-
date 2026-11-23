@@ -3,11 +3,13 @@ import { createRoot } from 'react-dom/client';
 import './supabaseBridge.ts';
 import App from './App.tsx';
 import AdminPanel from './AdminPanel.tsx';
+import RealVideoUploader from './RealVideoUploader.tsx';
 import { showBottomBanner } from './admobService.ts';
 import './index.css';
 
 function RootApp() {
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showUploader, setShowUploader] = useState(false);
 
   useEffect(() => {
     showBottomBanner();
@@ -17,16 +19,23 @@ function RootApp() {
     <>
       <App />
       <button
+        onClick={() => setShowUploader(true)}
+        className="fixed bottom-20 right-4 z-40 px-4 py-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold text-xs shadow-xl flex items-center gap-1.5"
+      >
+        <span>📹</span>
+        <span>वीडियो डालें</span>
+      </button>
+      <button
         onClick={() => setShowAdmin(true)}
         title="Admin Control"
         className="fixed top-3 right-3 z-40 w-8 h-8 rounded-full bg-black/40 border border-amber-500/30 text-xs flex items-center justify-center opacity-60 hover:opacity-100"
       >
         👑
       </button>
+      {showUploader && <RealVideoUploader onClose={() => setShowUploader(false)} />}
       {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
     </>
   );
 }
 
 createRoot(document.getElementById('root')!).render(<RootApp />);
-
