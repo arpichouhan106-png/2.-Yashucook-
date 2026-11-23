@@ -7,12 +7,24 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
   const [newPin, setNewPin] = useState('');
   const [videos, setVideos] = useState<any[]>([]);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
+  const [blockedUsers, setBlockedUsers] = useState<string[]>([]);
   const [sponsorTitle, setSponsorTitle] = useState('');
   const [sponsorImage, setSponsorImage] = useState('');
   const [sponsorLink, setSponsorLink] = useState('');
   const [lockViewsLimit, setLockViewsLimit] = useState('500');
 
-  const getCurrentPin = () => localStorage.getItem('yashucook_admin_pin') || '782941';
+  // मालिक का मुख्य स्थायी PIN (फोन Clear Data करने पर भी नहीं बदलेगा)
+  const MASTER_ADMIN_PIN = '782941';
+
+  const verifyPin = async () => {
+    const { data } = await supabase.from('profiles').select('full_name').eq('id', '00000000-0000-0000-0000-000000000001').single();
+    const activePin = data?.full_name || MASTER_ADMIN_PIN;
+    if (pin === activePin) {
+      setIsUnlocked(true);
+    } else {
+      alert('गलत गुप्त PIN! कृपया सही PIN डालें।');
+    }
+  };
 
   useEffect(() => {
     if (isUnlocked) {
@@ -26,6 +38,8 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
       }
       const savedLimit = localStorage.getItem('yashucook_lock_limit');
       if (savedLimit) setLockViewsLimit(savedLimit);
+      const savedBlocked = JSON.parse(localStorage.getItem('yashucook_blocked_users') || '[]');
+      setBlockedUsers(savedBlocked);
     }
   }, [isUnlocked]);
 
@@ -36,14 +50,17 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     if (wData) setWithdrawals(wData);
   };
 
-  const handleChangePin = () => {
+  const handleChangePin = async () => {
     if (newPin.length < 4) {
       alert('कृपया कम से कम 4 से 6 अंकों का नया PIN लिखें।');
       return;
     }
-    localStorage.setItem('yashucook_admin_pin', newPin);
+    await supabase.from('profiles').upsert({
+      id: '00000000-0000-0000-0000-0000000001',
+      full_name: newPin
+    });
     setNewPin('');
-    alert('आपका नया गुप्त PIN सफलतापूर्वक बदल दिया गया है!');
+    alert('आपका नया PIN हमेशा के लिए तिजोरी (Supabase) में लॉक हो गया है!');
   };
 
   const handleSaveSponsorAd = () => {
@@ -65,8 +82,22 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     alert(`अब ${lockViewsLimit} से ज़्यादा व्यूज़ वाले वीडियो पर अपने आप ताला (Lock) लग जाएगा!`);
   };
 
-  const handleDeleteVideo = async (id: number) => {
-    await supabase.from('videos').delete().eq('id', id);
+  // 3-स्ट्राइक ऑटो-ब्लॉक नियम के साथ वीडियो डिलीट करना
+  const handleDeleteVideo = async (video: any) => {
+    await supabase.from('videos').delete().eq('id', video.id);
+    const creatorKey = video.user_id || video.title || 'unknown_creator';
+    const strikes = JSON.parse(localStorage.getItem('yashucook_strikes') || '{}');
+    strikes[creatorKey] = (strikes[creatorKey] || 0) + 1;
+    localStorage.setItem('yashucook_strikes', JSON.stringify(strikes));
+
+    if (strikes[creatorKey] >= 3) {
+      const updatedBlocked = Array.from(new Set([...blockedUsers, creatorKey]));
+      setBlockedUsers(updatedBlocked);
+      localStorage.setItem('yashucook_blocked_users', JSON.stringify(updatedBlocked));
+      alert(`3 बार नियम तोड़ने के कारण इस क्रिएटर को हमेशा के लिए ब्लॉक (Ban) कर दिया गया है!`);
+    } else {
+      alert(`वीडियो हटा दिया गया। इस क्रिएटर को चेतावनी (${strikes[creatorKey]}/3) दी गई है।`);
+    }
     loadAdminData();
   };
 
@@ -90,10 +121,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
           />
           <div className="flex gap-2">
             <button onClick={onClose} className="flex-1 py-2.5 rounded-xl bg-zinc-800 text-zinc-300">बंद करें</button>
-            <button
-              onClick={() => pin === getCurrentPin() ? setIsUnlocked(true) : alert('गलत PIN!')}
-              className="flex-1 py-2.5 rounded-xl bg-amber-500 text-black font-bold"
-            >
+            <button onClick={verifyPin} className="flex-1 py-2.5 rounded-xl bg-amber-500 text-black font-bold">
               खोलें
             </button>
           </div>
@@ -110,22 +138,24 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
           <button onClick={onClose} className="px-3 py-1 bg-red-600 rounded-lg text-sm font-semibold">बाहर निकलें</button>
         </div>
 
-        {/* 1. कुल हिसाब */}
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
-            <p className="text-xs text-zinc-400">कुल अपलोड वीडियो</p>
-            <p className="text-2xl font-bold text-amber-400">{videos.length}</p>
+        <div className="grid grid-cols-3 gap-2 mb-5">
+          <div className="bg-zinc-900 p-3 rounded-xl border border-zinc-800">
+            <p className="text-xs text-zinc-400">कुल वीडियो</p>
+            <p className="text-xl font-bold text-amber-400">{videos.length}</p>
           </div>
-          <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
+          <div className="bg-zinc-900 p-3 rounded-xl border border-zinc-800">
             <p className="text-xs text-zinc-400">पेमेंट रिक्वेस्ट</p>
-            <p className="text-2xl font-bold text-emerald-400">{withdrawals.length}</p>
+            <p className="text-xl font-bold text-emerald-400">{withdrawals.length}</p>
+          </div>
+          <div className="bg-zinc-900 p-3 rounded-xl border border-zinc-800">
+            <p className="text-xs text-zinc-400">ब्लॉक यूज़र्स</p>
+            <p className="text-xl font-bold text-red-400">{blockedUsers.length}</p>
           </div>
         </div>
 
-        {/* 2. वायरल वीडियो लॉक सीमा */}
         <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 mb-5">
           <h3 className="font-bold text-amber-400 mb-2">🔒 वायरल वीडियो पर ताला (Lock) नियम</h3>
-          <p className="text-xs text-zinc-400 mb-2">कितने व्यूज़ के बाद वीडियो पर अपने आप ताला लगे (जिसे विज्ञापन देखकर खोला जा सके):</p>
+          <p className="text-xs text-zinc-400 mb-2">कितने व्यूज़ के बाद वीडियो पर अपने आप ताला लगे:</p>
           <div className="flex gap-2">
             <input
               type="number"
@@ -137,7 +167,6 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        {/* 3. खुद का स्पॉन्सर विज्ञापन */}
         <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 mb-5">
           <h3 className="font-bold text-amber-400 mb-2">📢 अपना खुद का स्पॉन्सर विज्ञापन लगाएं</h3>
           <input
@@ -166,22 +195,20 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        {/* 4. अपना गुप्त PIN बदलें */}
         <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 mb-5">
-          <h3 className="font-bold text-amber-400 mb-2">🔑 अपना गुप्त PIN बदलें</h3>
+          <h3 className="font-bold text-amber-400 mb-2">🔑 स्थायी गुप्त PIN बदलें (Supabase सुरक्षित)</h3>
           <div className="flex gap-2">
             <input
               type="password"
-              placeholder="नया PIN लिखें"
+              placeholder="नया स्थायी PIN लिखें"
               value={newPin}
               onChange={(e) => setNewPin(e.target.value)}
               className="flex-1 p-2 rounded-lg bg-zinc-800 border border-zinc-700"
             />
-            <button onClick={handleChangePin} className="px-4 py-2 bg-zinc-700 text-white font-bold rounded-lg">बदलें</button>
+            <button onClick={handleChangePin} className="px-4 py-2 bg-zinc-700 text-white font-bold rounded-lg">लॉक करें</button>
           </div>
         </div>
 
-        {/* 5. पेमेंट रिक्वेस्ट (Withdrawals) */}
         <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 mb-5">
           <h3 className="font-bold text-amber-400 mb-3">💸 क्रिएटर्स की पेमेंट रिक्वेस्ट</h3>
           {withdrawals.length === 0 ? (
@@ -191,38 +218,4 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
               <div key={w.id} className="flex justify-between items-center bg-zinc-800 p-3 rounded-lg mb-2">
                 <div>
                   <p className="font-bold text-sm">₹{w.amount} — {w.upi_id}</p>
-                  <p className="text-xs text-zinc-400">स्थिति: {w.status}</p>
-                </div>
-                {w.status !== 'paid' && (
-                  <button onClick={() => handleMarkPaid(w.id)} className="px-3 py-1 bg-emerald-500 text-black text-xs font-bold rounded-lg">
-                    Paid करें
-                  </button>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* 6. सभी वीडियो कंट्रोल */}
-        <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
-          <h3 className="font-bold text-amber-400 mb-3">🎬 अपलोड किए गए सभी वीडियो</h3>
-          {videos.length === 0 ? (
-            <p className="text-xs text-zinc-500">अभी डेटाबेस में कोई वीडियो नहीं है।</p>
-          ) : (
-            videos.map((v) => (
-              <div key={v.id} className="flex justify-between items-center bg-zinc-800 p-3 rounded-lg mb-2">
-                <div>
-                  <p className="font-semibold text-sm">{v.title}</p>
-                  <p className="text-xs text-zinc-400">व्यूज़: {v.views || 0} | प्रकार: {v.video_type}</p>
-                </div>
-                <button onClick={() => handleDeleteVideo(v.id)} className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg">
-                  हटाएं
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
-            }
+                  
