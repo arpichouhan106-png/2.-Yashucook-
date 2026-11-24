@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import './supabaseBridge.ts';
-import AdminPanel from './AdminPanel.tsx';
-import RealVideoUploader from './RealVideoUploader.tsx';
-import YouTubeStyleFeed from './YouTubeStyleFeed.tsx';
-import { showBottomBanner, onLongVideoOpened } from './admobService.ts';
-import { supabase } from './supabaseClient.ts';
+import './supabaseBridge';
+import AdminPanel from './AdminPanel';
+import RealVideoUploader from './RealVideoUploader';
+import YouTubeStyleFeed from './YouTubeStyleFeed';
+import { showBottomBanner, onLongVideoOpened } from './admobService';
+import { supabase } from './supabaseClient';
 import './index.css';
 
 function RootApp() {
@@ -95,4 +95,4 @@ function RootApp() {
 }
 
 createRoot(document.getElementById('root')!).render(<RootApp />);
-    
+
