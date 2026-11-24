@@ -17,8 +17,13 @@ export default function RealVideoUploader({ onClose }: { onClose: () => void }) 
   const thmRef = useRef<HTMLInputElement>(null);
 
   const onPickVideo = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.;
+    const f = e.target.files?.item(0);
     if (f) { setFile(f); setPreviewUrl(URL.createObjectURL(f)); }
+  };
+
+  const onPickThumb = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const t = e.target.files?.item(0);
+    if (t) setThumbFile(t);
   };
 
   const handleUpload = async () => {
@@ -58,7 +63,7 @@ export default function RealVideoUploader({ onClose }: { onClose: () => void }) 
 
         <input ref={camRef} type="file" accept="video/*" capture="environment" onChange={onPickVideo} className="hidden" />
         <input ref={galRef} type="file" accept="video/*" onChange={onPickVideo} className="hidden" />
-        <input ref={thmRef} type="file" accept="image/*" onChange={(e) => e.target.files?. && setThumbFile(e.target.files)} className="hidden" />
+        <input ref={thmRef} type="file" accept="image/*" onChange={onPickThumb} className="hidden" />
 
         {!previewUrl ? (
           <div className="grid grid-cols-2 gap-3 pt-2">
@@ -98,4 +103,4 @@ export default function RealVideoUploader({ onClose }: { onClose: () => void }) 
       </div>
     </div>
   );
-    }
+          }
