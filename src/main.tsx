@@ -10,7 +10,7 @@ import './index.css';
 
 function RootApp() {
   const [splash, setSplash] = useState(true);
-  const [tab, setTab] = useState<'home' | 'fridge' | 'profile'>('home');
+  const [tab, setTab] = useState('home');
   const [showAdmin, setShowAdmin] = useState(false);
   const [showUploader, setShowUploader] = useState(false);
   const [items, setItems] = useState('');
@@ -31,15 +31,10 @@ function RootApp() {
     return (
       <div className="bg-[#0A192F] min-h-screen flex flex-col items-center justify-center text-white">
         <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-5xl shadow-2xl animate-pulse">🍴</div>
-        <h1 className="mt-4 text-2xl font-extrabold text-amber-400 tracking-wider">Yashucook</h1>
+        <h1 className="mt-4 text-2xl font-extrabold text-amber-400">Yashucook</h1>
       </div>
     );
   }
-
-  const openProfile = async () => {
-    await onLongVideoOpened();
-    setTab('profile');
-  };
 
   const userVids = myVideos.filter((v) => !(v.description || '').includes('Yashucook Official'));
   const views = userVids.reduce((s, v) => s + (v.views || 0), 0);
@@ -60,7 +55,7 @@ function RootApp() {
       {tab === 'fridge' && (
         <div className="p-4 pb-24 space-y-3 max-w-md mx-auto">
           <h2 className="text-lg font-bold text-amber-400">🧊 Fridge AI रेसिपी सहायक</h2>
-          <textarea rows={3} value={items} onChange={(e) => setItems(e.target.value)} placeholder="घर में रखी सामग्री लिखें (जैसे: आलू, प्याज, बेसन)..." className="w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 text-sm" />
+          <textarea rows={3} value={items} onChange={(e) => setItems(e.target.value)} placeholder="घर में रखी सामग्री लिखें..." className="w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 text-sm" />
           <button onClick={() => items.trim() && setAiRecipe(`🍲 (${items}) से आप 10 मिनट में स्वादिष्ट मसाला तड़का रेसिपी बना सकते हैं!`)} className="w-full py-3 rounded-xl bg-amber-500 text-black font-bold text-sm">✨ रेसिपी बताएं</button>
           {aiRecipe && <div className="p-3.5 rounded-xl bg-zinc-900 border border-amber-500/40 text-sm">{aiRecipe}</div>}
         </div>
@@ -81,9 +76,7 @@ function RootApp() {
             <h3 className="font-bold text-sm text-emerald-400">💸 पेमेंट रिक्वेस्ट व मैसेज (न्यूनतम ₹299)</h3>
             <input value={upi} onChange={(e) => setUpi(e.target.value)} placeholder="अपनी UPI ID डालें..." className="w-full p-2.5 rounded-xl bg-zinc-800 text-sm" />
             <textarea rows={2} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="मालिक को मैसेज लिखें..." className="w-full p-2.5 rounded-xl bg-zinc-800 text-sm" />
-            <button onClick={sendReq} className="w-full py-2.5 rounded-xl bg-emerald-500 text-black font-bold text-xs">
-              {earn >= 299 ? '🚀 पेमेंट रिक्वेस्ट व मैसेज भेजें' : `🔒 ₹299 पूरे होने पर खुलेगा (अभी ₹${earn})`}
-            </button>
+            <button onClick={sendReq} className="w-full py-2.5 rounded-xl bg-emerald-500 text-black font-bold text-xs">{earn >= 299 ? '🚀 पेमेंट रिक्वेस्ट भेजें' : `🔒 ₹299 पूरे होने पर खुलेगा (₹${earn})`}</button>
           </div>
         </div>
       )}
@@ -92,7 +85,7 @@ function RootApp() {
         <button onClick={() => setTab('home')} className={tab === 'home' ? 'flex flex-col items-center text-[10px] text-amber-400 font-bold' : 'flex flex-col items-center text-[10px] text-zinc-400'}><span className="text-base">🏠</span><span>Home</span></button>
         <button onClick={() => setTab('fridge')} className={tab === 'fridge' ? 'flex flex-col items-center text-[10px] text-amber-400 font-bold' : 'flex flex-col items-center text-[10px] text-zinc-400'}><span className="text-base">🧊</span><span>Fridge AI</span></button>
         <button onClick={() => setShowUploader(true)} className="w-14 h-14 -mt-6 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 text-black font-extrabold text-3xl flex items-center justify-center shadow-xl border-4 border-[#0A192F]">+</button>
-        <button onClick={openProfile} className={tab === 'profile' ? 'flex flex-col items-center text-[10px] text-amber-400 font-bold' : 'flex flex-col items-center text-[10px] text-zinc-400'}><span className="text-base">👤</span><span>प्रोफ़ाइल</span></button>
+        <button onClick={async () => { await onLongVideoOpened(); setTab('profile'); }} className={tab === 'profile' ? 'flex flex-col items-center text-[10px] text-amber-400 font-bold' : 'flex flex-col items-center text-[10px] text-zinc-400'}><span className="text-base">👤</span><span>प्रोफ़ाइल</span></button>
       </div>
 
       {showUploader && <RealVideoUploader onClose={() => setShowUploader(false)} />}
@@ -102,4 +95,4 @@ function RootApp() {
 }
 
 createRoot(document.getElementById('root')!).render(<RootApp />);
-      
+    
