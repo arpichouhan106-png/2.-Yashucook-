@@ -23,15 +23,16 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-
-      - name: Install Capacitor & Build Web
+                - name: Install Capacitor & Build Web
         run: |
           npm install --legacy-peer-deps
           npm run build
           npx cap sync android
 
-      - name: Build Android APK
+      - name: Fix Kotlin & Build Android APK
         run: |
+          find android -name "*.gradle*" -exec sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' {} +
+          find android -name "*.gradle*" -exec sed -i 's/jvmTarget = "21"/jvmTarget = "17"/g' {} +
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
