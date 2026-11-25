@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import './supabaseBridge';
 import AdminPanel from './AdminPanel';
@@ -23,20 +23,29 @@ function RootApp() {
   const [bio, setBio] = useState(localStorage.getItem('yc_bio') || '');
   const [avatar, setAvatar] = useState(localStorage.getItem('yc_avatar') || '');
   const [myVideos, setMyVideos] = useState<any[]>([]);
+  const stateRef = useRef({ tab: 'home', showUploader: false, showAdmin: false });
+
+  useEffect(() => {
+    stateRef.current = { tab, showUploader, showAdmin };
+    if (tab !== 'home' || showUploader || showAdmin) {
+      window.history.pushState({ inSubView: true }, '');
+    }
+  }, [tab, showUploader, showAdmin]);
 
   useEffect(() => {
     const t = setTimeout(() => setSplash(false), 1200);
     showBottomBanner();
     supabase.from('videos').select('*').then(({ data }) => data && setMyVideos(data));
-    window.history.pushState({ page: 'home' }, '');
-    const handleBack = () => {
-      window.history.pushState({ page: 'home' }, '');
-      setTab('home');
-      setShowUploader(false);
-      setShowAdmin(false);
+    const onBack = () => {
+      const s = stateRef.current;
+      if (s.showUploader || s.showAdmin || s.tab !== 'home') {
+        setShowUploader(false);
+        setShowAdmin(false);
+        setTab('home');
+      }
     };
-    window.addEventListener('popstate', handleBack);
-    return () => { clearTimeout(t); window.removeEventListener('popstate', handleBack); };
+    window.addEventListener('popstate', onBack);
+    return () => { clearTimeout(t); window.removeEventListener('popstate', onBack); };
   }, []);
 
   if (splash) {
@@ -53,7 +62,7 @@ function RootApp() {
   };
 
   const onPhoto = (e: any) => {
-    const f = e.target.files?.[0];
+    const f = e.target.files?.;
     if (!f) return;
     const r = new FileReader();
     r.onload = () => { setAvatar(String(r.result)); localStorage.setItem('yc_avatar', String(r.result)); };
@@ -74,7 +83,7 @@ function RootApp() {
 
   const bg = darkMode ? 'bg-[#0A192F] text-white' : 'bg-zinc-100 text-zinc-900';
   const card = darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200';
-  const matchedVid = myVideos.find((v) => items.trim() && (v.title || '').includes(items.split(',')[0].trim())) || myVideos[0];
+  const matchedVid = myVideos.find((v) => items.trim() && (v.title || '').includes(items.split(',').trim())) || myVideos;
 
   return (
     <div className={`${bg} min-h-screen`}>
@@ -139,3 +148,4 @@ function RootApp() {
 }
 
 createRoot(document.getElementById('root')!).render(<RootApp />);
+      
