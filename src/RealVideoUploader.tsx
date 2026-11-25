@@ -78,7 +78,8 @@ export default function RealVideoUploader({ onClose }: { onClose: () => void }) 
 
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="रेसिपी का नाम लिखें..." className="w-full p-2.5 rounded-xl bg-zinc-800 text-sm" />
         <select value={cat} onChange={(e) => setCat(e.target.value)} className="w-full p-2.5 rounded-xl bg-zinc-800 text-sm">
-          <option value="नाश्ता">नाश्ता</option><option value="सब्जी">सब्जी</option><option value="मिठाई">मिठाई</option><option value="स्ट्रीट फूड">स्ट्रीट फूड</option>
+          <option value="नाश्ता">नाश्ता</option><option value="सब्जी">सब्जी</option><option value="मिठाई">मिठाई</option><option value="स्ट्रीट फूड">स्ट्रीट फूड</option><option value="जंक फूड">जंक फूड</option>
+          
         </select>
         <textarea rows={2} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="सामग्री और बनाने की विधि लिखें..." className="w-full p-2.5 rounded-xl bg-zinc-800 text-sm" />
         <button onClick={upload} disabled={busy} className="w-full py-3 rounded-xl bg-emerald-500 text-black font-bold text-sm">{busy ? 'अपलोड हो रहा है...' : '🚀 वीडियो अपलोड करें'}</button>
