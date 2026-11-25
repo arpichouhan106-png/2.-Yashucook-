@@ -56,13 +56,13 @@ function RootApp() {
       </div>
     );
   }
-    const makeRecipe = () => {
+   const makeRecipe = () => {
     if (!items.trim()) return alert('कृपया फ्रिज में रखी सामग्री लिखें!');
     setAiRecipe(`🍲 रेसिपी: स्पेशल (${items}) मसाला\n\n📝 बनाने की पूरी विधि:\n1. सबसे पहले (${items}) को धोकर काट लें।\n2. कढ़ाई में 2 चम्मच तेल गरम करें और जीरा, राई, हल्दी डालें।\n3. कटी सामग्री और नमक-मसाले मिलाकर 8-10 मिनट ढककर पकाएं।\n4. हरा धनिया डालकर गरमा-गरम परोसें!`);
   };
 
   const onPhoto = (e: any) => {
-    const f = e.target.files?.;
+    const f = e.target.files?.item(0);
     if (!f) return;
     const r = new FileReader();
     r.onload = () => { setAvatar(String(r.result)); localStorage.setItem('yc_avatar', String(r.result)); };
@@ -83,7 +83,8 @@ function RootApp() {
 
   const bg = darkMode ? 'bg-[#0A192F] text-white' : 'bg-zinc-100 text-zinc-900';
   const card = darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200';
-  const matchedVid = myVideos.find((v) => items.trim() && (v.title || '').includes(items.split(',').trim())) || myVideos;
+  const firstWord = items.split(',').at(0)?.trim() || '';
+  const matchedVid = myVideos.find((v) => firstWord && (v.title || '').includes(firstWord)) || myVideos.at(0);
 
   return (
     <div className={`${bg} min-h-screen`}>
@@ -148,4 +149,3 @@ function RootApp() {
 }
 
 createRoot(document.getElementById('root')!).render(<RootApp />);
-      
