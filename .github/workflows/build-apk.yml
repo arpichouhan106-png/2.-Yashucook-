@@ -31,7 +31,9 @@ jobs:
           rm -rf android/app/src/main/res/mipmap-*
           npx capacitor-assets generate --android --iconBackgroundColor '#0A192F' --splashBackgroundColor '#0A192F'
           sed -i 's|</application>|    <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3864474052773685~5278392075"/>\n    </application>|g' android/app/src/main/AndroidManifest.xml
-          npx cap sync
+                  sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET" />\n    <application android:usesCleartextTraffic="true"|' android/app/src/main/AndroidManifest.xml
+                  
+          npx cap sya
       - name: Fix Kotlin & Build Android APK
         run: |
           echo 'configurations.all { resolutionStrategy { force "org.jetbrains.kotlin:kotlin-stdlib:1.8.22" } }' >> android/app/build.gradle
