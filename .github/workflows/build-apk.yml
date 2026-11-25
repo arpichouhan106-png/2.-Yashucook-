@@ -1,44 +1,31 @@
 name: Build Yashucook APK
-
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-                - name: Install Capacitor & Build Web
-        run: |
+      - run: |
           npm install --legacy-peer-deps
           npm run build
           npx cap sync android
-
-      - name: Fix Kotlin & Build Android APK
-        run: |
+      - run: |
           find android -name "*.gradle*" -exec sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' {} +
           find android -name "*.gradle*" -exec sed -i 's/jvmTarget = "21"/jvmTarget = "17"/g' {} +
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
-
-      - name: Upload Yashucook APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: Yashucook-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
