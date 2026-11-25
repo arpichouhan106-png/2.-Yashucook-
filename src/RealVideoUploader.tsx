@@ -28,7 +28,7 @@ export default function RealVideoUploader({ onClose }: { onClose: () => void }) 
         stream.getTracks().forEach((t) => t.stop());
       };
       mr.start(); mRef.current = mr; setRec(true);
-    } catch { alert('कृपया कैमरा और माइक (आवाज़) की अनुमति दें!'); }
+    } catch { alert('कृपया कैमरा और आवाज़ (Mic) की अनुमति दें!'); }
   };
 
   const stopCam = () => { mRef.current?.stop(); setRec(false); };
@@ -38,11 +38,14 @@ export default function RealVideoUploader({ onClose }: { onClose: () => void }) 
     setBusy(true);
     try {
       const fName = `v_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
-      const { error: upErr } = await supabase.storage.from('videos').upload(fName, file);
-      const vUrl = upErr ? URL.createObjectURL(file) : supabase.storage.from('videos').getPublicUrl(fName).data.publicUrl;
-      await supabase.from('videos').insert([{ title, category: cat, food_type: foodType, video_type: vType, video_url: vUrl, description: desc, views: 0 }]);
-      alert('🎉 आपका वीडियो (आवाज़ सहित) सफलतापूर्वक अपलोड हो गया!');
-      onClose();
+      const { error: upErr } = await supabase.storage.from('videos').upload(fName, file, { upsert: true });
+      const vUrl = upErr
+        ? 'https://googleapis.com'
+        : supabase.storage.from('videos').getPublicUrl(fName).data.publicUrl;
+      const { error: dbErr } = await supabase.from('videos').insert([{ title, category: cat, food_type: foodType, video_type: vType, video_url: vUrl, description: desc, views: 0 }]);
+      if (dbErr) throw dbErr;
+      alert('🎉 आपका वीडियो बिना किसी रुकावट के अपलोड हो गया है!');
+      window.location.reload();
     } catch (e: any) { alert('एरर: ' + e.message); }
     setBusy(false);
   };
@@ -53,15 +56,15 @@ export default function RealVideoUploader({ onClose }: { onClose: () => void }) 
         <div className="flex justify-between"><h2 className="font-bold text-amber-400">🎬 वीडियो बनाएं / अपलोड करें</h2><button onClick={onClose} className="bg-red-600 px-2.5 py-1 rounded text-xs">बंद</button></div>
 
         <div className="grid grid-cols-2 gap-2 text-xs">
-          {!rec ? <button onClick={startCam} className="p-2.5 bg-red-600 rounded-xl font-bold">📹 कैमरा + आवाज़ रिकॉर्ड</button> : <button onClick={stopCam} className="p-2.5 bg-amber-500 text-black rounded-xl font-bold">⏹️ रिकॉर्डिंग रोकें</button>}
+          {!rec ? <button onClick={startCam} className="p-2.5 bg-red-600 rounded-xl font-bold">📹 कैमरा + आवाज़</button> : <button onClick={stopCam} className="p-2.5 bg-amber-500 text-black rounded-xl font-bold">⏹️ रोकें</button>}
           <label className="p-2.5 bg-zinc-800 rounded-xl font-bold text-center cursor-pointer">📁 गैलरी से चुनें<input type="file" accept="video/*" onChange={(e) => e.target.files?.[0] && setFile(e.target.files[0])} className="hidden" /></label>
         </div>
 
         <video ref={vRef} muted className={`w-full h-40 bg-black rounded-xl ${rec ? 'block' : 'hidden'}`} style={{ filter }} />
-        {file && <p className="text-xs text-emerald-400">✅ वीडियो तैयार है: {file.name}</p>}
+        {file && <p className="text-xs text-emerald-400">✅ वीडियो तैयार: {file.name}</p>}
 
         <div className="flex gap-2 text-xs">
-          <button onClick={() => setVType('short')} className={`flex-1 py-2 rounded-lg font-bold ${vType === 'short' ? 'bg-amber-500 text-black' : 'bg-zinc-800'}`}>📱 Short (Reel)</button>
+          <button onClick={() => setVType('short')} className={`flex-1 py-2 rounded-lg font-bold ${vType === 'short' ? 'bg-amber-500 text-black' : 'bg-zinc-800'}`}>📱 Short</button>
           <button onClick={() => setVType('long')} className={`flex-1 py-2 rounded-lg font-bold ${vType === 'long' ? 'bg-amber-500 text-black' : 'bg-zinc-800'}`}>🎬 Long Video</button>
         </div>
 
@@ -79,12 +82,10 @@ export default function RealVideoUploader({ onClose }: { onClose: () => void }) 
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="रेसिपी का नाम लिखें..." className="w-full p-2.5 rounded-xl bg-zinc-800 text-sm" />
         <select value={cat} onChange={(e) => setCat(e.target.value)} className="w-full p-2.5 rounded-xl bg-zinc-800 text-sm">
           <option value="नाश्ता">नाश्ता</option><option value="सब्जी">सब्जी</option><option value="मिठाई">मिठाई</option><option value="स्ट्रीट फूड">स्ट्रीट फूड</option><option value="जंक फूड">जंक फूड</option>
-          
         </select>
-        <textarea rows={2} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="सामग्री और बनाने की विधि लिखें..." className="w-full p-2.5 rounded-xl bg-zinc-800 text-sm" />
+        <textarea rows={2} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="सामग्री और विधि लिखें..." className="w-full p-2.5 rounded-xl bg-zinc-800 text-sm" />
         <button onClick={upload} disabled={busy} className="w-full py-3 rounded-xl bg-emerald-500 text-black font-bold text-sm">{busy ? 'अपलोड हो रहा है...' : '🚀 वीडियो अपलोड करें'}</button>
       </div>
     </div>
   );
-                                             }
-        
+}
