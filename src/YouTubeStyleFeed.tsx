@@ -53,7 +53,7 @@ export default function YouTubeStyleFeed({ onOpenAdmin }: { onOpenAdmin: () => v
       </div>
 
       <div className="flex gap-2 overflow-x-auto p-3">
-        {['सभी', 'नाश्ता', 'सब्जी', 'मिठाई', 'स्ट्रीट फूड'].map((c) => (
+        {['सभी', 'नाश्ता', 'सब्जी', 'मिठाई', 'स्ट्रीट फूड', 'जंक फूड'].map((c) => (
           <button key={c} onClick={() => setCat(c)} className={cat === c ? 'px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-black' : 'px-3 py-1 rounded-full text-xs bg-zinc-900 text-zinc-300'}>{c}</button>
         ))}
       </div>
