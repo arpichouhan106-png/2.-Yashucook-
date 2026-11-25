@@ -1,9 +1,5 @@
 {
   "appId": "com.yashucook.app",
   "appName": "Yashucook",
-  "webDir": "dist",
-  "server": {
-    "url": "https://2-yashucook.vercel.app",
-    "cleartext": true
-  }
+  "webDir": "dist"
 }
